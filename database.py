@@ -52,6 +52,7 @@ def add_sample_data():
     """Add sample data to the database if it's empty."""
     conn = get_db_connection()
     book_count = conn.execute('SELECT COUNT(*) as count FROM books').fetchone()['count']
+    now = datetime.now()
     
     if book_count == 0:
         # Add sample books
@@ -77,6 +78,18 @@ def add_sample_data():
         
         # Update available copies for 1984
         conn.execute('UPDATE books SET available_copies = 0 WHERE id = 3')
+        overdue_samples = [
+            ('345453', 2, now - timedelta(days=19), now - timedelta(days=5)),  # 5 days overdue
+            ('298734', 2, now - timedelta(days=24), now - timedelta(days=10)),  # 10 days overdue
+            ('298745', 2, now - timedelta(days=49), now - timedelta(days=35)),  # 35 days overdue
+        ]
+
+        for patron, book, borrow, due in overdue_samples:
+            conn.execute('''
+                INSERT INTO borrow_records (patron_id, book_id, borrow_date, due_date)
+                VALUES (?, ?, ?, ?)
+            ''', (patron, book, borrow.isoformat(), due.isoformat()))
+
         
         conn.commit()
     
