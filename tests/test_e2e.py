@@ -1,15 +1,18 @@
 import pytest
 from playwright.sync_api import sync_playwright
 import random
+import os
 
 BASE_URL = "http://127.0.0.1:5000"
+
+if os.environ.get("CI") == "true":
+    pytest.skip("Skipping E2E tests in CI environment", allow_module_level=True)
 
 @pytest.fixture(scope="session")
 def browser():
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=False)  
+        browser = p.chromium.launch(headless=False, slow_mo=500)
         yield browser
-        browser = p.chromium.launch(headless=False, slow_mo=10000)
         browser.close()
 
 
